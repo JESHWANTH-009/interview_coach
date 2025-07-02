@@ -1,0 +1,14 @@
+.stats-section {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  margin-bottom: 36px;
+  margin-top: 18px;
+}
+@media (max-width: 900px) {
+  .stats-section {
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+} 

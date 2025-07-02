@@ -1,0 +1,31 @@
+/* frontend/src/components/dashboard.css */
+
+.dashboard-bg {
+  min-height: 100vh;
+  background: #f6f9fe;
+  width: 100vw;
+  overflow-x: hidden;
+}
+.dashboard-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 32px 0 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.dashboard-main-row {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  margin-top: 18px;
+  align-items: flex-start;
+}
+@media (max-width: 900px) {
+  .dashboard-main-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .dashboard-content {
+    padding: 18px 4px 0 4px;
+  }
+}

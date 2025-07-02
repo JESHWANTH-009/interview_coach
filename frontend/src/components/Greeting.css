@@ -1,0 +1,26 @@
+.greeting-section {
+  margin-bottom: 32px;
+  margin-top: 18px;
+}
+.greeting-title {
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: #181c32;
+  margin-bottom: 8px;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+.greeting-subtitle {
+  color: #6b7280;
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+@media (max-width: 600px) {
+  .greeting-title {
+    font-size: 1.3rem;
+  }
+  .greeting-section {
+    margin-bottom: 18px;
+    margin-top: 10px;
+  }
+} 

@@ -1,0 +1,76 @@
+.details-modal-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(30, 34, 45, 0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.details-modal {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(60, 80, 180, 0.13), 0 1.5px 6px rgba(0,0,0,0.07);
+  padding: 36px 32px 28px 32px;
+  max-width: 700px;
+  width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.close-btn {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #888;
+  cursor: pointer;
+  z-index: 10;
+}
+.details-meta {
+  color: #6b7280;
+  font-size: 1.01rem;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 18px;
+}
+.details-qa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.details-qa-item {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.details-q {
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 2px;
+}
+.details-a {
+  color: #181c32;
+}
+.details-feedback {
+  background: #f1f6ff;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  color: #2563eb;
+}
+.details-feedback h3 {
+  margin-top: 0;
+  color: #181c32;
+}
+@media (max-width: 600px) {
+  .details-modal {
+    padding: 18px 4px 12px 4px;
+    max-width: 99vw;
+  }
+} 

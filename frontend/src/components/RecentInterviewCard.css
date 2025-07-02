@@ -1,0 +1,106 @@
+.recent-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(60, 80, 180, 0.07), 0 1.5px 6px rgba(0,0,0,0.04);
+  padding: 22px 28px 18px 28px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #f1f3f9;
+}
+.recent-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.recent-card-title {
+  font-size: 1.22rem;
+  font-weight: 700;
+  color: #181c32;
+}
+.score-pill {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 3px 16px;
+  border-radius: 16px;
+  background: #e7f0fd;
+  color: #2563eb;
+  min-width: 44px;
+  text-align: center;
+}
+.score-pill-blue {
+  background: #e7f0fd;
+  color: #2563eb;
+}
+.score-pill-yellow {
+  background: #fff7d6;
+  color: #eab308;
+}
+.score-pill-green {
+  background: #e6f9ed;
+  color: #22c55e;
+}
+.recent-card-date-row {
+  margin-top: 2px;
+  gap: 6px;
+  color: #6b7280;
+  font-size: 1rem;
+}
+.calendar-icon {
+  font-size: 1.1rem;
+  margin-right: 2px;
+}
+.recent-card-questions {
+  color: #6b7280;
+  font-size: 1.04rem;
+  margin-bottom: 2px;
+}
+.recent-card-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  gap: 12px;
+}
+.recent-card-progress-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: #f1f3f9;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-right: 16px;
+}
+.recent-card-progress-bar-fill {
+  height: 100%;
+  background: #181c32;
+  border-radius: 6px 0 0 6px;
+  transition: width 0.3s;
+}
+.recent-card-details-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 1.04rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0 2px;
+  margin-left: 8px;
+}
+.recent-card-details-link:hover {
+  text-decoration: none;
+  color: #1746a2;
+}
+@media (max-width: 600px) {
+  .recent-card {
+    padding: 14px 6px 10px 6px;
+  }
+  .recent-card-title {
+    font-size: 1.05rem;
+  }
+  .score-pill {
+    font-size: 0.95rem;
+    padding: 2px 10px;
+  }
+} 

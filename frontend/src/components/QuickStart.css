@@ -1,0 +1,61 @@
+.quickstart-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(60, 80, 180, 0.06);
+  padding: 28px 28px 18px 28px;
+  min-width: 260px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-left: 24px;
+  margin-bottom: 24px;
+}
+.quickstart-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #181c32;
+  margin-bottom: 4px;
+}
+.quickstart-subtitle {
+  color: #6b7280;
+  font-size: 1.01rem;
+  margin-bottom: 18px;
+}
+.quickstart-btn-primary {
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 0;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+}
+.quickstart-btn-primary:hover {
+  background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
+}
+.quickstart-btn-secondary {
+  background: #fff;
+  color: #181c32;
+  font-size: 1.08rem;
+  font-weight: 600;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.quickstart-btn-secondary:hover {
+  background: #f1f6ff;
+  color: #2563eb;
+}
+@media (max-width: 900px) {
+  .quickstart-card {
+    margin-left: 0;
+    max-width: 100%;
+  }
+} 
