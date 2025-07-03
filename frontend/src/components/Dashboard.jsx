@@ -47,8 +47,8 @@ const Dashboard = ({ user }) => {
 
     const stats = [
         { label: 'Total Interviews', value: dashboardData.total_interviews, icon: icons.interviews },
-        { label: 'Average Score', value: (dashboardData.average_score * 10) + '%', icon: icons.score },
-        { label: 'Best Score', value: (dashboardData.best_score * 10) + '%', icon: icons.best },
+        { label: 'Average Score', value: dashboardData.average_score + '%', icon: icons.score },
+        { label: 'Best Score', value: dashboardData.best_score + '%', icon: icons.best },
     ];
 
     return (

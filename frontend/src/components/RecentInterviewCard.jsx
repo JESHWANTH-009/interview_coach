@@ -34,19 +34,11 @@ function RecentInterviewCard({ title, date, progress, score, onViewDetails }) {
     <div className="recent-card">
       <div className="recent-card-row">
         <div className="recent-card-title">{title}</div>
-        <div className={`score-pill ${getScoreColor(scoreValue)}`}>{scoreValue}/{scoreTotal}</div>
       </div>
       <div className="recent-card-row recent-card-date-row">
-        <span className="calendar-icon" role="img" aria-label="calendar">📅</span>
         <span className="recent-card-date">{dateStr}</span>
       </div>
-      <div className="recent-card-progress-row">
-        <span className="recent-card-questions">Score</span>
-      </div>
       <div className="recent-card-bar-row">
-        <div className="recent-card-progress-bar-bg">
-          <div className="recent-card-progress-bar-fill" style={{ width: `${percent}%` }}></div>
-        </div>
         <button className="recent-card-details-link" onClick={onViewDetails}>View Details</button>
       </div>
     </div>

@@ -136,68 +136,66 @@ const FeedbackDisplay = ({ feedback, userAnswer }) => {
 };
 
 // New component for interview summary
-const InterviewSummary = ({ finalScore, perQuestionScores, overallFeedback, role, numQuestions, onBackToDashboard }) => {
-  const getScoreInfo = (score) => {
-    const numScore = parseInt(score);
-    if (numScore >= 8) return { color: '#22c55e', message: 'Excellent!', emoji: '🎉' };
-    if (numScore >= 6) return { color: '#f59e0b', message: 'Good Job!', emoji: '👍' };
-    return { color: '#ef4444', message: 'Keep Practicing!', emoji: '💪' };
-  };
-  const scoreInfo = getScoreInfo(finalScore);
+const InterviewSummary = ({ finalScore, perQuestionScores, overallFeedback, role, numQuestions, onBackToDashboard, questionAnswerBreakdown }) => {
+  // Calculate total score and percentage
+  const totalScore = Array.isArray(perQuestionScores) ? perQuestionScores.reduce((sum, s) => sum + (parseInt(s) || 0), 0) : 0;
+  const totalPossible = (Array.isArray(perQuestionScores) ? perQuestionScores.length : numQuestions) * 10;
+  const percent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
+
   return (
-    <div className="interview-summary-container">
-      <div className="summary-header">
-        <h1 className="summary-title">
-          <span className="summary-icon">🏆</span>
-          Interview Complete!
-        </h1>
-        <p className="summary-subtitle">{role} Interview Results</p>
-      </div>
-      <div className="summary-content">
-        {/* Final Score Badge - visually prominent */}
-        <div className="final-score-badge" style={{ background: scoreInfo.color, color: '#fff', fontWeight: 'bold', fontSize: '2.5rem', borderRadius: '2rem', padding: '1.2rem 2.5rem', margin: '0 auto 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 12px #0001' }}>
-          <span style={{ fontSize: '3rem', fontWeight: 700 }}>{finalScore !== null ? `${finalScore}/10` : '--'}</span>
-          <span style={{ fontSize: '1.1rem', fontWeight: 500, marginTop: '0.2rem', letterSpacing: '0.02em' }}>Final Score</span>
-        </div>
-        {/* Per-question scores breakdown */}
-        {perQuestionScores && perQuestionScores.length > 0 && (
-          <div className="per-question-scores" style={{ margin: '0 auto 1.5rem', maxWidth: 600 }}>
-            <h4 style={{ fontWeight: 600, marginBottom: 8 }}>Per-Question Scores:</h4>
-            <ul style={{ paddingLeft: 24 }}>
-              {perQuestionScores.map((item, idx) => (
-                <li key={idx} style={{ marginBottom: 4 }}>
-                  {typeof item === 'string' ? item : `Q${idx + 1} Score: ${item}/10`}
-                </li>
-              ))}
-            </ul>
+    <div className="container interview-summary-container mt-4">
+      <div className="row justify-content-center">
+        <div className="col-12 col-md-8">
+          <div className="summary-header text-center mb-4">
+            <h1 className="summary-title fw-bold">Interview Complete!</h1>
+            <p className="summary-subtitle text-secondary">{role} Interview Results</p>
           </div>
-        )}
-        <div className="summary-card metrics-card">
-          <h3 className="card-title">
-            <span className="card-icon">📊</span>
-            Performance Overview
-          </h3>
-          <div className="metrics-grid">
-            <div className="metric-item">
-              <div className="metric-icon">❓</div>
-              <div className="metric-content">
-                <span className="metric-value">{numQuestions}</span>
-                <span className="metric-label">Questions Answered</span>
+          <div className="summary-content">
+            {/* Final Score Badge - visually prominent */}
+            <div className="d-flex flex-column align-items-center mb-4">
+              <span className="badge bg-primary fs-1 px-4 py-3 mb-2">{`${totalScore}/${totalPossible}`} <span className="fs-5">({percent}%)</span></span>
+              <span className="fw-semibold text-primary">Final Score</span>
+            </div>
+            {/* Questions + Answers + Score breakdown */}
+            {questionAnswerBreakdown && questionAnswerBreakdown.length > 0 && (
+              <div className="qa-breakdown card p-3 mb-4">
+                <h5 className="fw-bold mb-3">Question & Answer Breakdown</h5>
+                <div className="row g-3">
+                  {questionAnswerBreakdown.map((item, idx) => (
+                    <div className="col-12" key={idx}>
+                      <div className="card card-body bg-light">
+                        <div className="mb-1"><span className="fw-bold">Q{idx + 1}:</span> {item.question}</div>
+                        <div className="mb-1"><span className="fw-bold">A{idx + 1}:</span> {item.answer}</div>
+                        <div><span className="badge bg-success">Score: {item.score}/10</span></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="summary-card metrics-card card p-3 mb-4">
+              <h5 className="fw-bold mb-3">Performance Overview</h5>
+              <div className="row g-3">
+                <div className="col-6 col-md-4">
+                  <div className="card card-body text-center">
+                    <h5 className="fw-bold">Questions Answered</h5>
+                    <span className="fs-4">{Array.isArray(perQuestionScores) ? perQuestionScores.length : numQuestions}</span>
+                  </div>
+                </div>
               </div>
             </div>
+            {/* Render overallFeedback as markdown for a rich summary */}
+            {overallFeedback && (
+              <div className="summary-card markdown-summary-card card p-3 mb-4">
+                <ReactMarkdown>{typeof overallFeedback === 'string' ? overallFeedback : JSON.stringify(overallFeedback)}</ReactMarkdown>
+              </div>
+            )}
+            <div className="summary-actions d-flex justify-content-center">
+              <button className="btn btn-primary" onClick={onBackToDashboard}>
+                Back to Dashboard
+              </button>
+            </div>
           </div>
-        </div>
-        {/* Render overallFeedback as markdown for a rich summary */}
-        {overallFeedback && (
-          <div className="summary-card markdown-summary-card">
-            <ReactMarkdown>{typeof overallFeedback === 'string' ? overallFeedback : JSON.stringify(overallFeedback)}</ReactMarkdown>
-          </div>
-        )}
-        <div className="summary-actions">
-          <button className="primary-action-btn" onClick={onBackToDashboard}>
-            <span className="btn-icon">🏠</span>
-            Back to Dashboard
-          </button>
         </div>
       </div>
     </div>
@@ -230,6 +228,7 @@ const InterviewSession = () => {
   const [numQuestions, setNumQuestions] = useState(5); // Default, will update after fetch
   const [interviewComplete, setInterviewComplete] = useState(false); // NEW: track completion
   const [perQuestionScores, setPerQuestionScores] = useState([]);
+  const [questionAnswerBreakdown, setQuestionAnswerBreakdown] = useState([]);
 
   // Fetch interview document by ID
   const fetchInterviewDetails = async (id) => {
@@ -305,6 +304,16 @@ const InterviewSession = () => {
           setFinalScore(feedbackResponse.data.final_score);
           setOverallFeedback(feedbackResponse.data.overall_feedback);
           setPerQuestionScores(feedbackResponse.data.per_question_scores || []);
+          // Build question+answer+score breakdown for UI
+          if (feedbackResponse.data.questions) {
+            setQuestionAnswerBreakdown(feedbackResponse.data.questions.map((q, idx) => ({
+              question: q.question,
+              answer: q.user_answer,
+              score: q.score,
+            })));
+          } else {
+            setQuestionAnswerBreakdown([]);
+          }
           setFinished(true);
         } catch (err) {
           if (err.response?.status === 429 || err.response?.data?.detail?.includes('quota')) {
@@ -349,6 +358,7 @@ const InterviewSession = () => {
         role={role}
         numQuestions={numQuestions}
         onBackToDashboard={() => navigate('/dashboard')}
+        questionAnswerBreakdown={questionAnswerBreakdown}
       />
     );
   }

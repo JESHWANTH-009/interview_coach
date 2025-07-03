@@ -230,6 +230,7 @@ async def overall_feedback(request: Request, user_data: dict = Depends(get_curre
         "questions": []
     }
     per_question_scores = []
+    questions_array = []
     for i in range(num_answered):
         score = evaluations[i].get('score')
         per_question_scores.append(score)
@@ -240,6 +241,11 @@ async def overall_feedback(request: Request, user_data: dict = Depends(get_curre
             "score_reason": evaluations[i].get('reason'),
             "confidence": evaluations[i].get('confidence'),
             "red_flag": evaluations[i].get('red_flag')
+        })
+        questions_array.append({
+            "question": questions[i].get('text', 'N/A'),
+            "user_answer": answers[i].get('text', 'N/A'),
+            "score": score
         })
 
     # Calculate average score
@@ -267,5 +273,6 @@ async def overall_feedback(request: Request, user_data: dict = Depends(get_curre
     return {
         "final_score": avg_score,
         "per_question_scores": per_question_scores,
-        "overall_feedback": raw_feedback_text
+        "overall_feedback": raw_feedback_text,
+        "questions": questions_array
     }

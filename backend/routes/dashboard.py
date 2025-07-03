@@ -23,6 +23,8 @@ async def get_dashboard_data(uid: str):
 
         interview_list = []
         total_score = 0
+        total_max_score = 0
+        best_percentage = 0.0
         count = 0
 
         for interview in interviews:
@@ -34,24 +36,24 @@ async def get_dashboard_data(uid: str):
             
             # Calculate score from evaluation data
             evaluations = i.get("evaluation", [])
-            if evaluations:
-                # Calculate average score from all evaluations
-                scores = []
-                for eval_item in evaluations:
-                    feedback = eval_item.get("feedback", {})
-                    if isinstance(feedback, dict) and "score" in feedback:
-                        try:
-                            score_val = int(feedback["score"])
-                            scores.append(score_val)
-                        except (ValueError, TypeError):
-                            continue
-                
-                if scores:
-                    score = int(sum(scores) / len(scores))
+            interview_score = 0
+            interview_max = len(evaluations) * 10
+            for eval_item in evaluations:
+                score_val = eval_item.get("score")
+                if isinstance(score_val, (int, float)):
+                    interview_score += score_val
                 else:
-                    score = 0
-            else:
-                score = 0
+                    try:
+                        interview_score += int(score_val)
+                    except (ValueError, TypeError):
+                        continue
+            
+            # Avoid division by zero
+            interview_percentage = (interview_score / interview_max * 100) if interview_max > 0 else 0.0
+            if interview_percentage > best_percentage:
+                best_percentage = interview_percentage
+            total_score += interview_score
+            total_max_score += interview_max
             
             # Get interview details
             num_questions = len(i.get("questions", []))
@@ -75,8 +77,8 @@ async def get_dashboard_data(uid: str):
                 "id": interview.id,
                 "title": i.get("role", "Developer"),
                 "date": date_str,
-                "progress": f"{score}/10",
-                "score": score,
+                "progress": f"{interview_score}/{interview_max}",
+                "score": interview_score,
                 "role": i.get("role", "Developer"),
                 "experience": i.get("experience", ""),
                 "ended_at": i.get("ended_at", ""),
@@ -84,7 +86,6 @@ async def get_dashboard_data(uid: str):
             }
             
             interview_list.append(interview_data)
-            total_score += score
             count += 1
             print(f"total_interviews: {count}")
 
@@ -92,14 +93,14 @@ async def get_dashboard_data(uid: str):
         interview_list.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         recent_interviews = interview_list[:3]
 
-        average_score = total_score // count if count > 0 else 0
-        best_score = max([i["score"] for i in interview_list], default=0)
+        average_percentage = round((total_score / total_max_score * 100), 1) if total_max_score > 0 else 0.0
+        best_percentage = round(best_percentage, 1)
 
         return {
             "name": name,
             "total_interviews": count,
-            "average_score": average_score,
-            "best_score": best_score,
+            "average_score": average_percentage,
+            "best_score": best_percentage,
             "recent_interviews": recent_interviews
         }
 
