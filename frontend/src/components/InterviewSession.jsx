@@ -238,7 +238,6 @@ const InterviewSession = () => {
   const [apiQuotaExceeded, setApiQuotaExceeded] = useState(false);
   const [numQuestions, setNumQuestions] = useState(5); // Default, will update after fetch
   const [interviewComplete, setInterviewComplete] = useState(false); // NEW: track completion
-  const [pendingNext, setPendingNext] = useState(false); // NEW: track if waiting for next question
 
   // Fetch interview document by ID
   const fetchInterviewDetails = async (id) => {
@@ -302,14 +301,36 @@ const InterviewSession = () => {
       setStructuredFeedback(response.data.evaluation_feedback || null);
       setLastUserAnswer(userAnswer);
       setShowFeedback(true);
-      setPendingNext(true); // NEW: show feedback, wait for Next
-      // If interview is completed (next_question is null), set completion state
       if (response.data.next_question === null || response.data.message === "Interview completed.") {
         setQuestionIndex(numQuestions);
         setInterviewComplete(true);
+        // Automatically fetch overall feedback after last answer
+        setLoading(true);
+        try {
+          const feedbackResponse = await api.post('/interview/overall-feedback', {
+            interview_id: interviewId,
+          });
+          setFinalScore(feedbackResponse.data.final_score);
+          setOverallFeedback(feedbackResponse.data.overall_feedback);
+          setFinished(true);
+        } catch (err) {
+          if (err.response?.status === 429 || err.response?.data?.detail?.includes('quota')) {
+            setApiQuotaExceeded(true);
+            setError('API quota exceeded. Using fallback feedback for this interview.');
+          } else {
+            setError('Failed to fetch final feedback.');
+          }
+        } finally {
+          setLoading(false);
+        }
       } else {
-        // Store the next question for later
+        // Immediately show next question and clear answer
         setCurrentQuestion(response.data.next_question);
+        setUserAnswer('');
+        setShowFeedback(false);
+        setStructuredFeedback(null);
+        setLastUserAnswer('');
+        setQuestionIndex((idx) => idx + 1);
       }
     } catch (err) {
       if (err.response?.status === 429 || err.response?.data?.detail?.includes('quota')) {
@@ -317,38 +338,6 @@ const InterviewSession = () => {
         setError('API quota exceeded. Using fallback evaluation for this answer.');
       } else {
         setError('Failed to submit answer.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // NEW: Next button handler to show next question and answer box
-  const handleNext = () => {
-    setShowFeedback(false);
-    setStructuredFeedback(null);
-    setLastUserAnswer('');
-    setUserAnswer('');
-    setPendingNext(false);
-    setQuestionIndex((idx) => idx + 1);
-  };
-
-  const handleFinish = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const response = await api.post('/interview/overall-feedback', {
-        interview_id: interviewId,
-      });
-      setFinalScore(response.data.final_score);
-      setOverallFeedback(response.data.overall_feedback);
-      setFinished(true);
-    } catch (err) {
-      if (err.response?.status === 429 || err.response?.data?.detail?.includes('quota')) {
-        setApiQuotaExceeded(true);
-        setError('API quota exceeded. Using fallback feedback for this interview.');
-      } else {
-        setError('Failed to fetch final feedback.');
       }
     } finally {
       setLoading(false);
@@ -386,8 +375,8 @@ const InterviewSession = () => {
           <div className="interview-role">{role} Interview</div>
           <div className="interview-progress">Question {questionIndex} of {numQuestions}</div>
         </div>
-        {/* Only show question and answer box if not showing feedback */}
-        {!pendingNext && !interviewComplete && (
+        {/* Only show question and answer box if not interviewComplete */}
+        {!interviewComplete && (
           <>
             <div className="interview-question">{currentQuestion}</div>
             <textarea
@@ -399,22 +388,12 @@ const InterviewSession = () => {
             />
           </>
         )}
-        {/* Show feedback after submit, with Next button */}
-        {showFeedback && (
-          <>
-            <FeedbackDisplay 
-              feedback={structuredFeedback} 
-              userAnswer={lastUserAnswer}
-            />
-            <div className="interview-actions">
-              {pendingNext && !interviewComplete && (
-                <button className="next-btn" onClick={handleNext}>Next</button>
-              )}
-              {interviewComplete && !finished && (
-                <button className="finish-btn" onClick={handleFinish}>Finish Interview</button>
-              )}
-            </div>
-          </>
+        {/* Show feedback if showFeedback is true and interviewComplete */}
+        {showFeedback && interviewComplete && (
+          <FeedbackDisplay 
+            feedback={structuredFeedback} 
+            userAnswer={lastUserAnswer}
+          />
         )}
         {/* Only show submit if not showing feedback or interview complete */}
         <div className="interview-actions">

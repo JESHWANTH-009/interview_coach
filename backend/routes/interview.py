@@ -83,51 +83,35 @@ async def submit_answer(data: AnswerRequest, user_data: dict = Depends(get_curre
         if interview_data.get('user_uid') != user_uid or not interview_data.get('is_active'):
             raise HTTPException(status_code=403, detail="Unauthorized or inactive interview.")
 
-        evaluation_feedback = await evaluate_answer(
-            interview_data['role'],
-            interview_data['experience'],
-            data.question_text,
-            data.answer_text
-        )
-        print(f"[INFO] Evaluation: {evaluation_feedback}")
-
-        # Prepare conversation history
-        conversation_history = []
         questions = interview_data.get('questions', [])
         answers = interview_data.get('answers', [])
-        for i in range(len(questions)):
-            conversation_history.append({"role": "model", "parts": [{"text": questions[i].get("text", "")}]})
-            if i < len(answers):
-                conversation_history.append({"role": "user", "parts": [{"text": answers[i].get("text", "")}]})
-        conversation_history.append({"role": "user", "parts": [{"text": data.answer_text}]})
+        num_questions = interview_data.get('num_questions', 10)
 
         updated_answers = answers + [{
             "text": data.answer_text,
             "timestamp": datetime.utcnow().isoformat(),
             "from_ai": False
         }]
-        updated_evaluations = interview_data.get("evaluation", []) + [{
-            "question": data.question_text,
-            "answer": data.answer_text,
-            "feedback": evaluation_feedback,
-            "timestamp": datetime.utcnow().isoformat()
-        }]
 
-        num_questions = interview_data.get('num_questions', 10)
-
+        # If all questions answered, do not generate next question, just update answers
         if len(updated_answers) >= num_questions:
             await asyncio.to_thread(interview_ref.update, {
                 "answers": updated_answers,
-                "evaluation": updated_evaluations,
-                "is_active": False,
-                "ended_at": datetime.utcnow(),
                 "updated_at": firestore.SERVER_TIMESTAMP
             })
             return {
                 "message": "Interview completed.",
-                "next_question": None,
-                "evaluation_feedback": evaluation_feedback
+                "next_question": None
             }
+
+        # Otherwise, generate next question
+        # Prepare conversation history for next question
+        conversation_history = []
+        for i in range(len(questions)):
+            conversation_history.append({"role": "model", "parts": [{"text": questions[i].get("text", "")}]})
+            if i < len(answers):
+                conversation_history.append({"role": "user", "parts": [{"text": answers[i].get("text", "")}]})
+        conversation_history.append({"role": "user", "parts": [{"text": data.answer_text}]})
 
         next_question = await generate_next_question(
             interview_data['role'],
@@ -142,15 +126,13 @@ async def submit_answer(data: AnswerRequest, user_data: dict = Depends(get_curre
         }]
         await asyncio.to_thread(interview_ref.update, {
             "answers": updated_answers,
-            "evaluation": updated_evaluations,
             "questions": updated_questions,
             "updated_at": firestore.SERVER_TIMESTAMP
         })
 
         return {
             "message": "Answer submitted and next question generated successfully",
-            "next_question": next_question,
-            "evaluation_feedback": evaluation_feedback
+            "next_question": next_question
         }
 
     except Exception as e:
@@ -183,6 +165,25 @@ async def get_next_question_safeguarded(request: Request, user_data: dict = Depe
 
     return {"message": "Manual next route should not be used in normal flow."}
 
+@router.post('/end')
+async def end_interview(request: Request, user_data: dict = Depends(get_current_user_data)):
+    data = await request.json()
+    interview_id = data.get("interview_id")
+    user_uid = user_data['uid']
+    interview_ref = db.collection('interviews').document(interview_id)
+    interview_doc = await asyncio.to_thread(interview_ref.get)
+    if not interview_doc.exists:
+        raise HTTPException(status_code=404, detail="Interview not found.")
+    interview_data = interview_doc.to_dict()
+    if interview_data.get('user_uid') != user_uid:
+        raise HTTPException(status_code=403, detail="Not authorized to end this interview.")
+    await asyncio.to_thread(interview_ref.update, {
+        'is_active': False,
+        'ended_at': datetime.utcnow(),
+        'updated_at': firestore.SERVER_TIMESTAMP
+    })
+    return {"message": "Interview marked as completed and inactive."}
+
 @router.post("/overall-feedback")
 async def overall_feedback(request: Request, user_data: dict = Depends(get_current_user_data)):
     data = await request.json()
@@ -195,44 +196,41 @@ async def overall_feedback(request: Request, user_data: dict = Depends(get_curre
     interview_data = interview_doc.to_dict()
     if interview_data.get('user_uid') != user_uid:
         raise HTTPException(status_code=403, detail="Not authorized to get feedback for this interview.")
-    # Use the same logic as end_interview
-    overall_feedback_data_for_ai = {
+
+    # Only use real questions and answers
+    questions = interview_data.get('questions', [])
+    answers = interview_data.get('answers', [])
+    num_answered = min(len(questions), len(answers))
+    feedback_input = {
         "role": interview_data.get('role', 'N/A'),
         "experience": interview_data.get('experience', 'N/A'),
         "questions": []
     }
-    questions = interview_data.get('questions', [])
-    answers = interview_data.get('answers', [])
-    evaluations = interview_data.get('evaluation', [])
-    num_answered_questions = min(len(questions), len(answers), len(evaluations))
-    for i in range(num_answered_questions):
-        question_text = questions[i].get('text', 'N/A')
-        answer_text = answers[i].get('text', 'N/A')
-        evaluation_feedback_item = evaluations[i].get('feedback', {})
-        eval_summary = (
-            f"Correctness: {evaluation_feedback_item.get('correctness', 'N/A')}, "
-            f"Depth: {evaluation_feedback_item.get('depth', 'N/A')}, "
-            f"Relevance: {evaluation_feedback_item.get('relevance', 'N/A')}, "
-            f"Score: {evaluation_feedback_item.get('score', 'N/A')}/10.\n"
-            f"Detailed Feedback: {evaluation_feedback_item.get('detailed_feedback', '')}\n"
-            f"Suggestions: {evaluation_feedback_item.get('suggestions_for_improvement', '')}"
-        ).strip()
-        overall_feedback_data_for_ai['questions'].append({
-            "question": question_text,
-            "user_answer": answer_text,
-            "evaluation_feedback": eval_summary
+    for i in range(num_answered):
+        feedback_input['questions'].append({
+            "question": questions[i].get('text', 'N/A'),
+            "user_answer": answers[i].get('text', 'N/A')
         })
-    raw_feedback_text = await asyncio.to_thread(generate_overall_feedback, overall_feedback_data_for_ai)
-    structured_feedback = raw_feedback_text
-    # Optionally, calculate a final score (average of all scores)
-    scores = [e.get('feedback', {}).get('score', 0) for e in evaluations if 'feedback' in e]
-    final_score = int(sum(scores) / len(scores)) if scores else 0
-    await asyncio.to_thread(interview_ref.update, {
-        'is_active': False,
-        'ended_at': datetime.utcnow(),
-        'overall_feedback': structured_feedback
-    })
+
+    raw_feedback_text = await asyncio.to_thread(generate_overall_feedback, feedback_input)
+    # Optionally, calculate a final score (AI can include it in markdown, or you can average if you want)
+    final_score = None  # Not calculated here unless you want to add logic
+
+    # Mark interview as inactive and set ended_at if not already
+    if interview_data.get('is_active', True):
+        await asyncio.to_thread(interview_ref.update, {
+            'is_active': False,
+            'ended_at': datetime.utcnow(),
+            'overall_feedback': raw_feedback_text,
+            'updated_at': firestore.SERVER_TIMESTAMP
+        })
+    else:
+        await asyncio.to_thread(interview_ref.update, {
+            'overall_feedback': raw_feedback_text,
+            'updated_at': firestore.SERVER_TIMESTAMP
+        })
+
     return {
         "final_score": final_score,
-        "overall_feedback": structured_feedback
+        "overall_feedback": raw_feedback_text
     }
