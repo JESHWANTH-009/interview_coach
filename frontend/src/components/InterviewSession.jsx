@@ -136,7 +136,7 @@ const FeedbackDisplay = ({ feedback, userAnswer }) => {
 };
 
 // New component for interview summary
-const InterviewSummary = ({ finalScore, overallFeedback, role, numQuestions, onBackToDashboard }) => {
+const InterviewSummary = ({ finalScore, perQuestionScores, overallFeedback, role, numQuestions, onBackToDashboard }) => {
   const getScoreInfo = (score) => {
     const numScore = parseInt(score);
     if (numScore >= 8) return { color: '#22c55e', message: 'Excellent!', emoji: '🎉' };
@@ -154,19 +154,24 @@ const InterviewSummary = ({ finalScore, overallFeedback, role, numQuestions, onB
         <p className="summary-subtitle">{role} Interview Results</p>
       </div>
       <div className="summary-content">
-        <div className="summary-card score-card">
-          <div className="score-display" style={{ background: `linear-gradient(135deg, ${scoreInfo.color} 0%, ${scoreInfo.color}dd 100%)` }}>
-            <div className="score-circle">
-              <span className="score-number">{finalScore !== null ? `${finalScore}/10` : '--'}</span>
-              <span className="score-label">Final Score</span>
-              <span className="score-percentage">{finalScore !== null ? `${finalScore * 10}%` : ''}</span>
-            </div>
-            <div className="score-message">
-              <span className="message-emoji">{scoreInfo.emoji}</span>
-              <span className="message-text">{scoreInfo.message}</span>
-            </div>
-          </div>
+        {/* Final Score Badge - visually prominent */}
+        <div className="final-score-badge" style={{ background: scoreInfo.color, color: '#fff', fontWeight: 'bold', fontSize: '2.5rem', borderRadius: '2rem', padding: '1.2rem 2.5rem', margin: '0 auto 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 12px #0001' }}>
+          <span style={{ fontSize: '3rem', fontWeight: 700 }}>{finalScore !== null ? `${finalScore}/10` : '--'}</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: 500, marginTop: '0.2rem', letterSpacing: '0.02em' }}>Final Score</span>
         </div>
+        {/* Per-question scores breakdown */}
+        {perQuestionScores && perQuestionScores.length > 0 && (
+          <div className="per-question-scores" style={{ margin: '0 auto 1.5rem', maxWidth: 600 }}>
+            <h4 style={{ fontWeight: 600, marginBottom: 8 }}>Per-Question Scores:</h4>
+            <ul style={{ paddingLeft: 24 }}>
+              {perQuestionScores.map((item, idx) => (
+                <li key={idx} style={{ marginBottom: 4 }}>
+                  {typeof item === 'string' ? item : `Q${idx + 1} Score: ${item}/10`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="summary-card metrics-card">
           <h3 className="card-title">
             <span className="card-icon">📊</span>
@@ -178,20 +183,6 @@ const InterviewSummary = ({ finalScore, overallFeedback, role, numQuestions, onB
               <div className="metric-content">
                 <span className="metric-value">{numQuestions}</span>
                 <span className="metric-label">Questions Answered</span>
-              </div>
-            </div>
-            <div className="metric-item">
-              <div className="metric-icon">⏱️</div>
-              <div className="metric-content">
-                <span className="metric-value">~{Math.round(numQuestions * 2)}min</span>
-                <span className="metric-label">Estimated Duration</span>
-              </div>
-            </div>
-            <div className="metric-item">
-              <div className="metric-icon">🎯</div>
-              <div className="metric-content">
-                <span className="metric-value">{finalScore !== null ? `${(finalScore / numQuestions).toFixed(1)}` : '--'}</span>
-                <span className="metric-label">Average Per Question</span>
               </div>
             </div>
           </div>
@@ -238,6 +229,7 @@ const InterviewSession = () => {
   const [apiQuotaExceeded, setApiQuotaExceeded] = useState(false);
   const [numQuestions, setNumQuestions] = useState(5); // Default, will update after fetch
   const [interviewComplete, setInterviewComplete] = useState(false); // NEW: track completion
+  const [perQuestionScores, setPerQuestionScores] = useState([]);
 
   // Fetch interview document by ID
   const fetchInterviewDetails = async (id) => {
@@ -312,6 +304,7 @@ const InterviewSession = () => {
           });
           setFinalScore(feedbackResponse.data.final_score);
           setOverallFeedback(feedbackResponse.data.overall_feedback);
+          setPerQuestionScores(feedbackResponse.data.per_question_scores || []);
           setFinished(true);
         } catch (err) {
           if (err.response?.status === 429 || err.response?.data?.detail?.includes('quota')) {
@@ -351,6 +344,7 @@ const InterviewSession = () => {
     return (
       <InterviewSummary 
         finalScore={finalScore}
+        perQuestionScores={perQuestionScores}
         overallFeedback={overallFeedback}
         role={role}
         numQuestions={numQuestions}

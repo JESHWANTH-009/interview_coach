@@ -85,6 +85,7 @@ async def submit_answer(data: AnswerRequest, user_data: dict = Depends(get_curre
 
         questions = interview_data.get('questions', [])
         answers = interview_data.get('answers', [])
+        evaluations = interview_data.get('evaluation', [])
         num_questions = interview_data.get('num_questions', 10)
 
         updated_answers = answers + [{
@@ -93,15 +94,34 @@ async def submit_answer(data: AnswerRequest, user_data: dict = Depends(get_curre
             "from_ai": False
         }]
 
-        # If all questions answered, do not generate next question, just update answers
+        # Evaluate the answer and store the result
+        evaluation_feedback = await evaluate_answer(
+            interview_data['role'],
+            interview_data['experience'],
+            data.question_text,
+            data.answer_text
+        )
+        updated_evaluations = evaluations + [{
+            "question": data.question_text,
+            "answer": data.answer_text,
+            "score": evaluation_feedback.get("score"),
+            "reason": evaluation_feedback.get("reason"),
+            "confidence": evaluation_feedback.get("confidence"),
+            "red_flag": evaluation_feedback.get("red_flag"),
+            "timestamp": datetime.utcnow().isoformat()
+        }]
+
+        # If all questions answered, do not generate next question, just update answers and evaluations
         if len(updated_answers) >= num_questions:
             await asyncio.to_thread(interview_ref.update, {
                 "answers": updated_answers,
+                "evaluation": updated_evaluations,
                 "updated_at": firestore.SERVER_TIMESTAMP
             })
             return {
                 "message": "Interview completed.",
-                "next_question": None
+                "next_question": None,
+                "evaluation_feedback": evaluation_feedback
             }
 
         # Otherwise, generate next question
@@ -126,13 +146,15 @@ async def submit_answer(data: AnswerRequest, user_data: dict = Depends(get_curre
         }]
         await asyncio.to_thread(interview_ref.update, {
             "answers": updated_answers,
+            "evaluation": updated_evaluations,
             "questions": updated_questions,
             "updated_at": firestore.SERVER_TIMESTAMP
         })
 
         return {
             "message": "Answer submitted and next question generated successfully",
-            "next_question": next_question
+            "next_question": next_question,
+            "evaluation_feedback": evaluation_feedback
         }
 
     except Exception as e:
@@ -197,24 +219,36 @@ async def overall_feedback(request: Request, user_data: dict = Depends(get_curre
     if interview_data.get('user_uid') != user_uid:
         raise HTTPException(status_code=403, detail="Not authorized to get feedback for this interview.")
 
-    # Only use real questions and answers
+    # Only use real questions, answers, and evaluations
     questions = interview_data.get('questions', [])
     answers = interview_data.get('answers', [])
-    num_answered = min(len(questions), len(answers))
+    evaluations = interview_data.get('evaluation', [])
+    num_answered = min(len(questions), len(answers), len(evaluations))
     feedback_input = {
         "role": interview_data.get('role', 'N/A'),
         "experience": interview_data.get('experience', 'N/A'),
         "questions": []
     }
+    per_question_scores = []
     for i in range(num_answered):
+        score = evaluations[i].get('score')
+        per_question_scores.append(score)
         feedback_input['questions'].append({
             "question": questions[i].get('text', 'N/A'),
-            "user_answer": answers[i].get('text', 'N/A')
+            "user_answer": answers[i].get('text', 'N/A'),
+            "score": score,
+            "score_reason": evaluations[i].get('reason'),
+            "confidence": evaluations[i].get('confidence'),
+            "red_flag": evaluations[i].get('red_flag')
         })
 
+    # Calculate average score
+    if per_question_scores:
+        avg_score = round(sum(per_question_scores) / len(per_question_scores), 1)
+    else:
+        avg_score = 0.0
+
     raw_feedback_text = await asyncio.to_thread(generate_overall_feedback, feedback_input)
-    # Optionally, calculate a final score (AI can include it in markdown, or you can average if you want)
-    final_score = None  # Not calculated here unless you want to add logic
 
     # Mark interview as inactive and set ended_at if not already
     if interview_data.get('is_active', True):
@@ -231,6 +265,7 @@ async def overall_feedback(request: Request, user_data: dict = Depends(get_curre
         })
 
     return {
-        "final_score": final_score,
+        "final_score": avg_score,
+        "per_question_scores": per_question_scores,
         "overall_feedback": raw_feedback_text
     }
