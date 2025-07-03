@@ -89,9 +89,9 @@ async def get_dashboard_data(uid: str):
             count += 1
             print(f"total_interviews: {count}")
 
-        # Sort by creation date (newest first) and get only the latest 3 interviews
+        # Sort by creation date (newest first) and get all interviews
         interview_list.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-        recent_interviews = interview_list[:3]
+        recent_interviews = interview_list  # Return all, not just first 3
 
         average_percentage = round((total_score / total_max_score * 100), 1) if total_max_score > 0 else 0.0
         best_percentage = round(best_percentage, 1)

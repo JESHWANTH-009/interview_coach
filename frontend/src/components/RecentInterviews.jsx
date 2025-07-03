@@ -24,18 +24,17 @@ const formatDate = (dateString) => {
   }
 };
 
-function RecentInterviews({ interviews, onViewAll }) {
+function RecentInterviews({ interviews }) {
   const [selectedInterview, setSelectedInterview] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const [showAllModal, setShowAllModal] = useState(false);
-  const [allInterviews, setAllInterviews] = useState([]);
-  const [loadingAll, setLoadingAll] = useState(false);
+  const [page, setPage] = useState(1);
+  const interviewsPerPage = 5;
+  const totalPages = Math.ceil((interviews?.length || 0) / interviewsPerPage);
 
   const handleViewDetails = async (interview) => {
     setLoadingDetails(true);
     try {
-      // interview may have an id or you may need to pass it from parent
       const id = interview.id || interview.interview_id || interview._id;
       const response = await api.get(`/recent-interviews/${id}`);
       setSelectedInterview(response.data);
@@ -44,26 +43,6 @@ function RecentInterviews({ interviews, onViewAll }) {
       alert('Failed to fetch interview details.');
     } finally {
       setLoadingDetails(false);
-    }
-  };
-
-  const handleViewAll = async () => {
-    setLoadingAll(true);
-    try {
-      // Get uid from localStorage (or pass as prop if preferred)
-      const uid = localStorage.getItem('uid');
-      if (!uid) {
-        alert('User ID not found. Please log in again.');
-        setLoadingAll(false);
-        return;
-      }
-      const response = await api.get(`/user/all-interviews/${uid}`);
-      setAllInterviews(response.data.all_interviews);
-      setShowAllModal(true);
-    } catch (err) {
-      alert('Failed to fetch all interviews.');
-    } finally {
-      setLoadingAll(false);
     }
   };
 
@@ -86,6 +65,11 @@ function RecentInterviews({ interviews, onViewAll }) {
     );
   }
 
+  // Pagination logic
+  const startIdx = (page - 1) * interviewsPerPage;
+  const endIdx = startIdx + interviewsPerPage;
+  const paginatedInterviews = interviews.slice(startIdx, endIdx);
+
   return (
     <div className="recent-interviews-section">
       <div className="recent-interviews-header">
@@ -93,10 +77,9 @@ function RecentInterviews({ interviews, onViewAll }) {
           <div className="recent-interviews-title">Recent Interviews</div>
           <div className="recent-interviews-subtitle">Your latest practice sessions and results</div>
         </div>
-        <button className="recent-interviews-viewall" onClick={handleViewAll}>View All</button>
       </div>
       <div className="recent-interviews-list">
-        {interviews.map((interview, idx) => {
+        {paginatedInterviews.map((interview, idx) => {
           const answered = interview.answers ? interview.answers.length : 0;
           const total = interview.num_questions || (interview.questions && interview.questions.length) || 10;
           const progress = `${answered}/${total} questions completed`;
@@ -114,43 +97,24 @@ function RecentInterviews({ interviews, onViewAll }) {
           );
         })}
       </div>
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="recent-interviews-pagination" style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+          <button onClick={() => setPage(page - 1)} disabled={page === 1} style={{ marginRight: 8 }}>
+            Previous
+          </button>
+          <span style={{ alignSelf: 'center' }}>Page {page} of {totalPages}</span>
+          <button onClick={() => setPage(page + 1)} disabled={page === totalPages} style={{ marginLeft: 8 }}>
+            Next
+          </button>
+        </div>
+      )}
       <InterviewDetailsModal
         open={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
         interview={selectedInterview}
       />
       {loadingDetails && <div className="recent-interviews-loading">Loading details...</div>}
-      {showAllModal && (
-        <div className="details-modal-bg">
-          <div className="details-modal" style={{ maxWidth: 800, width: '98vw', maxHeight: '92vh', overflowY: 'auto' }}>
-            <button className="close-btn" onClick={() => setShowAllModal(false)}>&times;</button>
-            <h2 style={{marginBottom: 12}}>All Interview History</h2>
-            {loadingAll ? (
-              <div>Loading...</div>
-            ) : allInterviews.length === 0 ? (
-              <div>No interviews found.</div>
-            ) : (
-              allInterviews.map((interview, idx) => {
-                const answered = interview.answers ? interview.answers.length : 0;
-                const total = interview.num_questions || (interview.questions && interview.questions.length) || 10;
-                const progress = `${answered}/${total} questions completed`;
-                return (
-                  <RecentInterviewCard
-                    key={interview.id || idx}
-                    title={interview.title}
-                    date={formatDate(interview.date)}
-                    progress={progress}
-                    score={interview.score}
-                    answered={answered}
-                    total={total}
-                    onViewDetails={() => handleViewDetails(interview)}
-                  />
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
