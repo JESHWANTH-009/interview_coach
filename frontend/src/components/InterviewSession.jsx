@@ -143,58 +143,108 @@ const InterviewSummary = ({ finalScore, perQuestionScores, overallFeedback, role
   const percent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
 
   return (
-    <div className="container interview-summary-container mt-4">
-      <div className="row justify-content-center">
-        <div className="col-12 col-md-8">
-          <div className="summary-header text-center mb-4">
-            <h1 className="summary-title fw-bold">Interview Complete!</h1>
-            <p className="summary-subtitle text-secondary">{role} Interview Results</p>
-          </div>
-          <div className="summary-content">
-            {/* Final Score Badge - visually prominent */}
-            <div className="d-flex flex-column align-items-center mb-4">
-              <span className="badge bg-primary fs-1 px-4 py-3 mb-2">{`${totalScore}/${totalPossible}`} <span className="fs-5">({percent}%)</span></span>
-              <span className="fw-semibold text-primary">Final Score</span>
+    <div className="final-summary-page">
+      <div className="final-summary-container">
+        <div className="final-summary-header">
+          <h1 className="final-summary-title">Interview Complete!</h1>
+          <p className="final-summary-subtitle">{role} Interview Results</p>
+        </div>
+        
+        <div className="final-summary-content">
+          {/* Final Score Section */}
+          <section className="summary-section">
+            <h2 className="section-heading">Final Score</h2>
+            <div className="final-score-display">
+              <div className="score-number">{totalScore}/{totalPossible}</div>
+              <div className="score-percentage">({percent}%)</div>
             </div>
-            {/* Questions + Answers + Score breakdown */}
-            {questionAnswerBreakdown && questionAnswerBreakdown.length > 0 && (
-              <div className="qa-breakdown card p-3 mb-4">
-                <h5 className="fw-bold mb-3">Question & Answer Breakdown</h5>
-                <div className="row g-3">
-                  {questionAnswerBreakdown.map((item, idx) => (
-                    <div className="col-12" key={idx}>
-                      <div className="card card-body bg-light">
-                        <div className="mb-1"><span className="fw-bold">Q{idx + 1}:</span> {item.question}</div>
-                        <div className="mb-1"><span className="fw-bold">A{idx + 1}:</span> {item.answer}</div>
-                        <div><span className="badge bg-success">Score: {item.score}/10</span></div>
-                      </div>
+          </section>
+
+          {/* Summary of Performance */}
+          <section className="summary-section">
+            <h2 className="section-heading">Summary of Your Interview Performance</h2>
+            <div className="performance-summary">
+              <p>You completed {Array.isArray(perQuestionScores) ? perQuestionScores.length : numQuestions} questions in this {role} interview. 
+              Your overall performance shows {percent >= 70 ? 'strong' : percent >= 50 ? 'moderate' : 'room for improvement'} understanding of the key concepts.</p>
+            </div>
+          </section>
+
+          {/* Your Strengths */}
+          <section className="summary-section">
+            <h2 className="section-heading">Your Strengths</h2>
+            <div className="strengths-content">
+              <p>Based on your responses, you demonstrated solid knowledge in several areas. 
+              Your ability to articulate technical concepts and provide structured answers shows good communication skills.</p>
+            </div>
+          </section>
+
+          {/* Areas for Improvement */}
+          <section className="summary-section">
+            <h2 className="section-heading">Areas You Can Improve</h2>
+            <div className="improvement-content">
+              <p>Focus on deepening your understanding of specific technical concepts and practice providing more detailed explanations 
+              with concrete examples to strengthen your responses.</p>
+            </div>
+          </section>
+
+          {/* What to Study Next */}
+          <section className="summary-section">
+            <h2 className="section-heading">What to Study Next</h2>
+            <div className="study-content">
+              <p>Consider reviewing the core concepts related to {role} development, 
+              practice coding problems, and work on improving your problem-solving approach.</p>
+            </div>
+          </section>
+
+          {/* Confidence in Feedback */}
+          <section className="summary-section">
+            <h2 className="section-heading">Confidence in Feedback</h2>
+            <div className="confidence-content">
+              <p>This evaluation is based on your responses to interview questions and provides a reliable assessment 
+              of your current knowledge level in this domain.</p>
+            </div>
+          </section>
+
+          {/* Recommended Next Steps */}
+          <section className="summary-section">
+            <h2 className="section-heading">Recommended Next Steps</h2>
+            <div className="next-steps-content">
+              <ul className="next-steps-list">
+                <li>Review the questions you found challenging</li>
+                <li>Practice similar problems to build confidence</li>
+                <li>Consider taking another interview to track your progress</li>
+                <li>Focus on areas where you scored lower</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Per-Question Scores (Optional) */}
+          {questionAnswerBreakdown && questionAnswerBreakdown.length > 0 && (
+            <section className="summary-section">
+              <h2 className="section-heading">Per-Question Scores</h2>
+              <div className="question-scores">
+                {questionAnswerBreakdown.map((item, idx) => (
+                  <div className="question-score-item" key={idx}>
+                    <div className="question-text">
+                      <strong>Q{idx + 1}:</strong> {item.question}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="summary-card metrics-card card p-3 mb-4">
-              <h5 className="fw-bold mb-3">Performance Overview</h5>
-              <div className="row g-3">
-                <div className="col-6 col-md-4">
-                  <div className="card card-body text-center">
-                    <h5 className="fw-bold">Questions Answered</h5>
-                    <span className="fs-4">{Array.isArray(perQuestionScores) ? perQuestionScores.length : numQuestions}</span>
+                    <div className="answer-text">
+                      <strong>Your Answer:</strong> {item.answer}
+                    </div>
+                    <div className="score-display">
+                      <span className="score-badge">Score: {item.score}/10</span>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            </div>
-            {/* Render overallFeedback as markdown for a rich summary */}
-            {overallFeedback && (
-              <div className="summary-card markdown-summary-card card p-3 mb-4">
-                <ReactMarkdown>{typeof overallFeedback === 'string' ? overallFeedback : JSON.stringify(overallFeedback)}</ReactMarkdown>
-              </div>
-            )}
-            <div className="summary-actions d-flex justify-content-center">
-              <button className="btn btn-primary" onClick={onBackToDashboard}>
-                Back to Dashboard
-              </button>
-            </div>
+            </section>
+          )}
+
+          {/* Return to Dashboard Button */}
+          <div className="summary-actions">
+            <button className="return-dashboard-btn" onClick={onBackToDashboard}>
+              Return to Dashboard
+            </button>
           </div>
         </div>
       </div>

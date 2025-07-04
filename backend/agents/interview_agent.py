@@ -216,13 +216,13 @@ TRANSCRIPT:
 
 Please provide a markdown-formatted summary with the following sections:
 
-🎯 **Summary of Your Interview Performance** (brief, encouraging tone)
-✅ **Your Strengths**
-⚠️ **Areas You Can Improve**
-📘 **What to Study Next**
-🧠 **Final Score: {avg_score}/10** (based on accuracy, depth, clarity)
-💡 **Confidence in Feedback: High / Medium / Low**
-👣 **Recommended Next Steps** (study topics, practice tips)
+**Summary of Your Interview Performance** (brief, encouraging tone)
+**Your Strengths**
+**Areas You Can Improve**
+**What to Study Next**
+**Final Score: {avg_score}/10** (based on accuracy, depth, clarity)
+**Confidence in Feedback: High / Medium / Low**
+**Recommended Next Steps** (study topics, practice tips)
 
 **Per-Question Scores:**
 {chr(10).join(per_question_scores_md)}
