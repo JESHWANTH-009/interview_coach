@@ -6,10 +6,10 @@ import re
 
 load_dotenv()
 
-# ✅ Load API key properly
+# Load API key properly
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# ✅ Instantiate the model correctly
+# Instantiate the model correctly
 model = genai.GenerativeModel("gemini-2.0-flash")
 
 class GeminiQuotaExceededError(Exception):
@@ -17,7 +17,7 @@ class GeminiQuotaExceededError(Exception):
     pass
 
 
-# ✅ Extract text helper
+# Extract text helper
 def extract_text_from_response(response) -> str:
     try:
         if hasattr(response, 'text') and response.text:
@@ -29,7 +29,7 @@ def extract_text_from_response(response) -> str:
     return "Failed to extract valid response text from Gemini."
 
 
-# ✅ Generate first question
+#Generate first question
 async def generate_first_question(role: str, experience: str) -> str:
     prompt = (
         f"You are an AI Interview Coach specializing in {role} roles. "
@@ -48,7 +48,7 @@ async def generate_first_question(role: str, experience: str) -> str:
         return "Failed to generate the first question. Please try again later."
 
 
-# ✅ Generate next question
+# Generate next question
 async def generate_next_question(role: str, experience: str, conversation_history: list[dict]) -> str:
     instruction = (
         f"You are an AI Interview Coach specializing in {role} roles. "

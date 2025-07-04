@@ -47,23 +47,23 @@ function App() {
   }, []); // Empty dependency array means this runs once on mount
 
   const handleAuthSuccess = (uid, email, token = null) => {
-    // This is called after successful signup or login
-    // Firebase auth state listener (onAuthStateChanged) will update the 'user' state naturally
-    // We explicitly set idToken here just for immediate use if needed, though the listener will also update it.
-    if (token) {
-      // This branch is executed after a successful CLIENT-SIDE login (Email/Password or Google)
-      // The onAuthStateChanged listener will automatically update the 'user' state
-      // and cause the Dashboard to render.
-      setIdToken(token); // Set ID token if provided (from login)
-      console.log(`User ${email} (${uid}) successfully logged in.`);
-    } else {
-      // This branch is typically executed after a successful backend SIGNUP
-      // (where 'token' is not yet available because the user isn't client-side logged in)
-      console.log(`User ${email} (${uid}) successfully signed up via backend.`);
-      // AFTER SIGNUP: Force the view to switch to the Login component
-      setShowLogin(true); // <--- ADD THIS LINE HERE
-    }
-  };
+  // This is called after successful signup or login
+  // Firebase auth state listener (onAuthStateChanged) will update the 'user' state naturally
+  // We explicitly set idToken here just for immediate use if needed, though the listener will also update it.
+  if (token) {
+    // This branch is executed after a successful CLIENT-SIDE login (Email/Password or Google)
+    // The onAuthStateChanged listener will automatically update the 'user' state
+    // and cause the Dashboard to render.
+    setIdToken(token); // Set ID token if provided (from login)
+    console.log(`User ${email} (${uid}) successfully logged in.`);
+  } else {
+    // This branch is typically executed after a successful backend SIGNUP
+    // (where 'token' is not yet available because the user isn't client-side logged in)
+    console.log(`User ${email} (${uid}) successfully signed up via backend.`);
+    // AFTER SIGNUP: Force the view to switch to the Login component
+    setShowLogin(true); // <--- ADD THIS LINE HERE
+  }
+};
   const handleLogout = async () => {
     try {
       await signOut(auth); // Sign out from Firebase client-side
@@ -82,18 +82,18 @@ function App() {
         <Route
           path="/*"
           element={user ? (
-            // User is logged in, show Dashboard (we'll create this component next)
-            <Dashboard user={user} idToken={idToken} onLogout={handleLogout} />
+        // User is logged in, show Dashboard (we'll create this component next)
+        <Dashboard user={user} idToken={idToken} onLogout={handleLogout} />
+      ) : (
+        // User is not logged in, show Auth forms
+        <>
+          {showLogin ? (
+            <Login onLoginSuccess={handleAuthSuccess} onToggleView={() => setShowLogin(false)} />
           ) : (
-            // User is not logged in, show Auth forms
-            <>
-              {showLogin ? (
-                <Login onLoginSuccess={handleAuthSuccess} onToggleView={() => setShowLogin(false)} />
-              ) : (
-                <Signup onSignupSuccess={handleAuthSuccess} onToggleView={() => setShowLogin(true)} />
-              )}
-            </>
+            <Signup onSignupSuccess={handleAuthSuccess} onToggleView={() => setShowLogin(true)} />
           )}
+        </>
+      )}
         />
       </Routes>
     </div>

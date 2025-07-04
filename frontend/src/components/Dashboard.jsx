@@ -66,7 +66,7 @@ const Dashboard = ({ user }) => {
                     <QuickStart
                         onStartNew={() => setShowInterviewSetup(true)}
                     />
-                </div>
+                    </div>
             </div>
             <InterviewSetup open={showInterviewSetup} onClose={() => setShowInterviewSetup(false)} />
         </div>
