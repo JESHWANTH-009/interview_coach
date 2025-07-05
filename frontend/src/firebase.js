@@ -9,7 +9,7 @@ const firebaseConfig = {
   projectId:import.meta.env.VITE_my_projectId,
   storageBucket:import.meta.env.VITE_my_storageBucket,
   messagingSenderId:import.meta.env.VITE_my_messagingSenderId,
-  appId:import.meta.env.VITE_my_apiKey,
+  appId:import.meta.env.VITE_my_apiId,
   measurementId:import.meta.env.VITE_my_measurementId
 };
 
