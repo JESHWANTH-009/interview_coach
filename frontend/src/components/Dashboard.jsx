@@ -14,7 +14,7 @@ const icons = {
   best: <span role="img" aria-label="star">⭐</span>,
 };
 
-const Dashboard = ({ user }) => {
+const Dashboard = ({ user, onLogout }) => {
     const [dashboardData, setDashboardData] = useState(null);
     const [dashboardError, setDashboardError] = useState(null);
     const [dashboardLoading, setDashboardLoading] = useState(true);
@@ -53,7 +53,7 @@ const Dashboard = ({ user }) => {
 
     return (
         <div className="dashboard-bg">
-            <Navbar />
+            <Navbar onLogout={onLogout} />
             <div className="dashboard-content">
                 <Greeting name={dashboardData.name} />
                 <StatsSection stats={stats} />
