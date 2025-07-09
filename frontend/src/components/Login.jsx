@@ -24,6 +24,8 @@ function Login({ onLoginSuccess, onToggleView }) { // Receive props for success 
       const user = userCredential.user;
 
       // 2. Get the Firebase ID Token
+      console.log(user)
+
       const idToken = await user.getIdToken();
       console.log('Firebase ID Token:', idToken);
 

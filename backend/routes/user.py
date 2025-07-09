@@ -27,7 +27,7 @@ async def get_user_profile(user_data: dict = Depends(get_current_user_data)):
 
     user_ref = db.collection('users').document(current_user_uid)
     # Firestore get() is synchronous, no await needed here
-    user_doc = user_ref.get() # <--- CORRECTED: Removed await
+    user_doc = user_ref.get()
 
     if user_doc.exists:
         profile_data = user_doc.to_dict()
@@ -47,10 +47,10 @@ async def get_user_profile(user_data: dict = Depends(get_current_user_data)):
             "created_at": firestore.SERVER_TIMESTAMP
         }
         # Firestore set() is synchronous, no await needed here
-        user_ref.set(new_profile) # <--- CORRECTED: Removed await
+        user_ref.set(new_profile)
 
         # Fetch the just-created document (synchronously) to get the server timestamp and return
-        created_doc = user_ref.get() # <--- CORRECTED: Removed await
+        created_doc = user_ref.get()
         profile_data = created_doc.to_dict()
         if 'created_at' in profile_data and hasattr(profile_data['created_at'], 'isoformat'):
              profile_data['created_at'] = profile_data['created_at'].isoformat()
@@ -65,7 +65,6 @@ async def get_interview_by_id(interview_id: str, user_data: dict = Depends(get_c
     interview = interview_doc.to_dict()
     if interview.get('user_uid') != user_data['uid']:
         raise HTTPException(status_code=403, detail='Not authorized to view this interview')
-    # Only return safe fields
     return {
         'id': interview_id,
         'role': interview.get('role'),
